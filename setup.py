@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 if 'build_sphinx' in sys.argv or 'develop' in sys.argv:
     from setuptools import setup,Extension
@@ -49,7 +50,7 @@ except AttributeError:
 dirs = list(Cython.__path__)
 dirs.extend(numpy_include_dirs)
 dirs.append('.')
-print dirs
+print(dirs)
 
 ext_cplfit = Extension("plfit.cplfit",
                        ["plfit/cplfit.pyx"],
@@ -67,7 +68,7 @@ if __name__=="__main__":
     # gfortran = OK.  g77, g95 NOT ok
     # also, this is kind of a ridiculous hack...
     if any([x in sys.argv for x in ['build','install','develop']]):
-        fortran_compile_command = "cd plfit && f2py -c fplfit.f -m fplfit --fcompiler=gfortran && cd .."
+        fortran_compile_command = "cd plfit && f2py3 -c fplfit.f -m fplfit --fcompiler=gfortran && cd .."
         os.system(fortran_compile_command)
     # do this first so it gets copied (in principle...)
     # in practice, see hack cont'd

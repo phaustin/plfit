@@ -24,6 +24,8 @@ Example very simple use::
     MyPL.plotpdf(log=True)
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
 
 import numpy 
 import numpy as np
@@ -31,9 +33,11 @@ import time
 import pylab
 try:
     import fplfit
+    print('fortran: ',dir(fplfit))
     fortranOK = True
 except:
     fortranOK = False
+    print('what is the matter')
 try:
     import cplfit
     cyOK = True
@@ -47,7 +51,7 @@ try:
     scipyOK = True
 except ImportError:
     scipyOK = False
-    print "scipy didn't import.  Can't compute certain basic statistics."
+    print("scipy didn't import.  Can't compute certain basic statistics.")
 
 
 def alpha_gen(x):
@@ -150,7 +154,7 @@ class plfit(object):
         """
         x = np.array(x) # make sure x is an array, otherwise the next step fails 
         if (x<0).sum() > 0:
-            print "Removed %i negative points" % ((x<0).sum())
+            print("Removed %i negative points" % ((x<0).sum()))
             x = x[x>0]
         self.data = x
         self.plfit(**kwargs)
@@ -252,9 +256,9 @@ class plfit(object):
                 # python (numpy) version
                 f_alpha = alpha_gen(z)
                 f_kstest = kstest_gen(z)
-                alpha_values = np.asarray(map(f_alpha,xmins),
+                alpha_values = np.asarray(list(map(f_alpha,xmins)),
                                              dtype='float')
-                kstest_values = np.asarray(map(f_kstest,xmins),
+                kstest_values = np.asarray(list(map(f_kstest,xmins)),
                                               dtype='float')
                 if not quiet:
                     print("PYTHON plfit executed in %f seconds" % (time.time()-t))
@@ -331,7 +335,7 @@ class plfit(object):
         self._ngtx = n
         if n == 1:
             if not silent:
-                print "Failure: only 1 point kept.  Probably not a power-law distribution."
+                print("Failure: only 1 point kept.  Probably not a power-law distribution.")
             self._alpha = alpha = 0
             self._alphaerr = 0
             self._likelihood = L = 0
@@ -343,21 +347,21 @@ class plfit(object):
             raise ValueError("plfit failed; returned a nan")
 
         if not quiet:
-            if verbose: print "The lowest value included in the power-law fit, ",
-            print "xmin: %g" % xmin,
-            if verbose: print "\nThe number of values above xmin, ",
-            print "n(>xmin): %i" % n,
-            if verbose: print "\nThe derived power-law alpha (p(x)~x^-alpha) with MLE-derived error, ",
-            print "alpha: %g +/- %g  " % (alpha,self._alphaerr), 
-            if verbose: print "\nThe log of the Likelihood (the maximized parameter; you minimized the negative log likelihood), ",
-            print "Log-Likelihood: %g  " % L,
-            if verbose: print "\nThe KS-test statistic between the best-fit power-law and the data, ",
-            print "ks: %g" % (ks),
+            if verbose: print("The lowest value included in the power-law fit, ", end=' ')
+            print("xmin: %g" % xmin, end=' ')
+            if verbose: print("\nThe number of values above xmin, ", end=' ')
+            print("n(>xmin): %i" % n, end=' ')
+            if verbose: print("\nThe derived power-law alpha (p(x)~x^-alpha) with MLE-derived error, ", end=' ')
+            print("alpha: %g +/- %g  " % (alpha,self._alphaerr), end=' ') 
+            if verbose: print("\nThe log of the Likelihood (the maximized parameter; you minimized the negative log likelihood), ", end=' ')
+            print("Log-Likelihood: %g  " % L, end=' ')
+            if verbose: print("\nThe KS-test statistic between the best-fit power-law and the data, ", end=' ')
+            print("ks: %g" % (ks), end=' ')
             if scipyOK:
-                if verbose: print " occurs with probability  ",
-                print "p(ks): %g" % (self._ks_prob)
+                if verbose: print(" occurs with probability  ", end=' ')
+                print("p(ks): %g" % (self._ks_prob))
             else:
-                print
+                print()
 
         return xmin,alpha
 
@@ -408,9 +412,9 @@ class plfit(object):
             self._alpha = self._alpha*(n-1.)/n+1./n
 
         if verbose:
-            print "alpha = %f   xmin = %f   ksD = %f   L = %f   (n<x) = %i  (n>=x) = %i" % (
+            print("alpha = %f   xmin = %f   ksD = %f   L = %f   (n<x) = %i  (n>=x) = %i" % (
                     best_alpha, best_xmin, best_ks, best_likelihood,
-                    (data<best_xmin).sum(), (data>=best_xmin).sum())
+                    (data<best_xmin).sum(), (data>=best_xmin).sum()))
 
 
         self._ngtx = n = (self.data>=self._xmin).sum()
@@ -623,15 +627,15 @@ class plfit(object):
             ksv.append(TEST._ks)
             if print_timing: 
                 deltat.append( time.time() - t0 )
-                print "Iteration %i: %g seconds" % (i, deltat[-1])
+                print("Iteration %i: %g seconds" % (i, deltat[-1]))
         
         ksv = np.array(ksv)
         p = (ksv>self._ks).sum() / float(niter)
         self._pval = p
         self._ks_rand = ksv
 
-        print "p(%i) = %0.3f" % (niter,p)
-        if print_timing: print "Iteration timing: %g +/- %g" % (np.mean(deltat),np.std(deltat))
+        print("p(%i) = %0.3f" % (niter,p))
+        if print_timing: print("Iteration timing: %g +/- %g" % (np.mean(deltat),np.std(deltat)))
 
         return p,ksv
 
@@ -675,9 +679,9 @@ class plfit(object):
             self.likelihood_ratio_D = -2 * (log(self._likelihood/self.lognormal_likelihood))
             
             if doprint: 
-                print "Lognormal KS D: %g  p(D): %g" % (self.lognormal_ksD,self.lognormal_ksP),
-                print "  Likelihood Ratio Statistic (powerlaw/lognormal): %g" % self.likelihood_ratio_D
-                print "At this point, have a look at Clauset et al 2009 Appendix C: determining sigma(likelihood_ratio)"
+                print("Lognormal KS D: %g  p(D): %g" % (self.lognormal_ksD,self.lognormal_ksP), end=' ')
+                print("  Likelihood Ratio Statistic (powerlaw/lognormal): %g" % self.likelihood_ratio_D)
+                print("At this point, have a look at Clauset et al 2009 Appendix C: determining sigma(likelihood_ratio)")
 
     def plot_lognormal_pdf(self,**kwargs):
         """
@@ -731,8 +735,8 @@ def plexp_cdf(x,xmin=1,alpha=2.5, pl_only=False, exp_only=False):
 
     x = np.array(x)
     C = 1/(-xmin/(1 - alpha) - xmin/alpha + exp(alpha)*xmin/alpha)
-    Ppl = lambda(X): 1+C*(xmin/(1-alpha)*(X/xmin)**(1-alpha))
-    Pexp = lambda(X): C*xmin/alpha*exp(alpha)-C*(xmin/alpha)*exp(-alpha*(X/xmin-1))
+    Ppl = lambda X: 1+C*(xmin/(1-alpha)*(X/xmin)**(1-alpha))
+    Pexp = lambda X: C*xmin/alpha*exp(alpha)-C*(xmin/alpha)*exp(-alpha*(X/xmin-1))
 
     if exp_only:
         return Pexp(x)
@@ -746,8 +750,8 @@ def plexp_cdf(x,xmin=1,alpha=2.5, pl_only=False, exp_only=False):
 def plexp_pdf(x,xmin=1,alpha=2.5):
     x = np.array(x)
     C = 1/(-xmin/(1 - alpha) - xmin/alpha + exp(alpha)*xmin/alpha)
-    Ppl = lambda(X): C*(X/xmin)**(-alpha)
-    Pexp = lambda(X): C*exp(-alpha*(X/xmin-1))
+    Ppl = lambda X: C*(X/xmin)**(-alpha)
+    Pexp = lambda X: C*exp(-alpha*(X/xmin-1))
     d=Ppl(x)
     d[x<xmin] = Pexp(x)[x<xmin]
     return d
@@ -966,9 +970,9 @@ def discrete_best_alpha(data, alpharangemults=(0.9,1.1), n_alpha=201, approximat
     best_likelihood = discrete_likelihood(data, best_xmin, best_alpha)
 
     if verbose:
-        print "alpha = %f   xmin = %f   ksD = %f   L = %f   (n<x) = %i  (n>=x) = %i" % (
+        print("alpha = %f   xmin = %f   ksD = %f   L = %f   (n<x) = %i  (n>=x) = %i" % (
                 best_alpha, best_xmin, best_ks, best_likelihood,
-                (data<best_xmin).sum(), (data>=best_xmin).sum())
+                (data<best_xmin).sum(), (data>=best_xmin).sum()))
 
     return best_alpha,best_xmin,best_ks,best_likelihood
 
