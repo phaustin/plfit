@@ -3,14 +3,19 @@ import scipy.io
 import plfit
 import time
 import os
+import pdb
+import numpy as np
+from matplotlib import pyplot as plt
+#pip install https://pypi.python.org/pypi/powerlaw 
+import powerlaw
 
 datadir=os.path.dirname(os.path.realpath(__file__))
 m = scipy.io.loadmat('{}/AUD_Ret_1000.mat'.format(datadir))
 A = m['A'].squeeze()
 Pnpy = plfit.plfit(A)
-Pfor = plfit.plfit(A)
-Pfor_nosmall = plfit.plfit(A)
-Pcy = plfit.plfit(A)
+#Pfor = plfit.plfit(A)
+#Pfor_nosmall = plfit.plfit(A)
+#Pcy = plfit.plfit(A)
 Py = plfit.plfit_py(A)
 
 
@@ -26,6 +31,8 @@ r_ppy = Py.plfit(nosmall=False)
 t3 = time.time()
 r_npy = Pnpy.plfit(usefortran=False, usecy=False, verbose=True, quiet=False, discrete=False, nosmall=False)
 t4 = time.time()
+#pdb.set_trace()
+
 
 print("xmin,alpha for 4 different implementations: ")
 print("npy: ",r_npy)
@@ -35,7 +42,6 @@ print("ppy: ",r_ppy)
 # print("nosmall: ",r_for_nosmall)
 print()
 
-import powerlaw
 if 'results' not in locals():
     t5 = time.time()
     results = powerlaw.Fit(A[A>0])
@@ -59,38 +65,36 @@ print("ppy: ",[(x1-x2) for x1,x2 in zip(r_ppy,(results.power_law.xmin, results.p
 
 
 # Below are some plots used for debugging
-from pylab import *
-import os
 
-if os.path.exists('/Users/adam/.matplotlib/ggplotrc'):
-    mpl.rc_file('/Users/adam/.matplotlib/ggplotrc')
+plt.close('all')
 
-figure(1)
-clf()
-plot(results.sigmas[np.isfinite(results.sigmas)], label='powerlaw')
-plot(Py._sigma, label='py')
-plot(Pfor._sigma, label='for')
-plot(Pfor_nosmall._sigma, label='for_nosmall')
-plot(Pnpy._sigma, label='npy')
-plot(Pcy._sigma, label='cy')
-gca().set_ylim(0,5)
-ylabel("$\sigma$")
-xlabel("$x_{min}$ index")
-legend(loc='best')
+fig1,ax1=plt.subplots(1,1)
+ax1.plot(results.sigmas[np.isfinite(results.sigmas)], label='powerlaw')
+ax1.plot(Py._sigma, label='py')
+#plot(Pfor._sigma, label='for')
+#plot(Pfor_nosmall._sigma, label='for_nosmall')
+ax1.plot(Pnpy._sigma, label='npy')
+#plot(Pcy._sigma, label='cy')
+ax1.set_ylim(0,5)
+ax1.set_ylabel("$\sigma$")
+ax1.set_xlabel("$x_{min}$ index")
+ax1.legend(loc='best')
 
-figure(2)
-clf()
-plot(np.array(results.Ds)[np.isfinite(results.alphas)], linewidth=2, label='powerlaw')
-plot(Py._xmin_kstest, linewidth=3, alpha=0.6, linestyle='--', label='py')
-plot(Pnpy._xmin_kstest, linewidth=3, alpha=0.6, linestyle=':', label='npy')
-plot(Pcy._xmin_kstest, linewidth=3, alpha=0.6, linestyle=':', label='cy')
-plot(Pfor._xmin_kstest, linewidth=3, alpha=0.6, linestyle=':', label='for')
-plot(Pfor_nosmall._xmin_kstest, linewidth=3, alpha=0.6, linestyle='-', label='for_nosmall')
-ylabel("$D_{KS}$")
-xlabel("$x_{min}$ index")
-legend(loc='best')
+fig2,ax2=plt.subplots(1,1)
+ax2.plot(np.array(results.Ds)[np.isfinite(results.alphas)], linewidth=2, label='powerlaw')
+ax2.plot(Py._xmin_kstest, linewidth=3, alpha=0.6, linestyle='--', label='py')
+ax2.plot(Pnpy._xmin_kstest, linewidth=3, alpha=0.6, linestyle=':', label='npy')
+#plot(Pcy._xmin_kstest, linewidth=3, alpha=0.6, linestyle=':', label='cy')
+#plot(Pfor._xmin_kstest, linewidth=3, alpha=0.6, linestyle=':', label='for')
+#plot(Pfor_nosmall._xmin_kstest, linewidth=3, alpha=0.6, linestyle='-', label='for_nosmall')
+ax2.set_ylabel("$D_{KS}$")
+ax2.set_xlabel("$x_{min}$ index")
+ax2.legend(loc='best')
+
+plt.show()
 
 print("What is the KS distance of the very last value, which in reality is undefined?")
 print("(As of Jan 2014, this value is explicitly excluded)")
-print([(x,locals()[x]._xmin_kstest[-1]) for x in "Py,Pnpy,Pcy,Pfor".split(',')])
+the_vars=locals()
+print([(x,the_vars[x]._xmin_kstest[-1]) for x in "Py,Pnpy".split(',')])
 
